@@ -21,24 +21,17 @@ SCOPES = [
     "https://www.googleapis.com/auth/drive"
 ]
 
-# Railway mounts secrets as files
-secret_path = "/secrets/GOOGLE_CREDENTIALS"
+creds_json = os.environ.get("GOOGLE_CREDENTIALS_JSON")
 
-if os.path.exists(secret_path):
-    # Railway production
-    with open(secret_path, "r") as f:
-        creds_dict = json.load(f)
+if not creds_json:
+    raise RuntimeError("GOOGLE_CREDENTIALS_JSON not set")
 
-    CREDS = Credentials.from_service_account_info(
-        creds_dict,
-        scopes=SCOPES
-    )
-else:
-    # Local development
-    CREDS = Credentials.from_service_account_file(
-        "credenciales.json",
-        scopes=SCOPES
-    )
+creds_dict = json.loads(creds_json)
+
+CREDS = Credentials.from_service_account_info(
+    creds_dict,
+    scopes=SCOPES
+)
 
 client = gspread.authorize(CREDS)
 sheet = client.open_by_key(
