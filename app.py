@@ -21,11 +21,21 @@ SCOPES = [
     "https://www.googleapis.com/auth/drive"
 ]
 
-creds_dict = json.loads(os.environ["GOOGLE_CREDENTIALS"])
-CREDS = Credentials.from_service_account_info(
-    creds_dict,
-    scopes=SCOPES
-)
+creds_raw = os.environ.get("GOOGLE_CREDENTIALS")
+
+if creds_raw:
+    # Railway / Cloud
+    creds_dict = json.loads(creds_raw)
+    CREDS = Credentials.from_service_account_info(
+        creds_dict,
+        scopes=SCOPES
+    )
+else:
+    # Local fallback
+    CREDS = Credentials.from_service_account_file(
+        "credenciales.json",
+        scopes=SCOPES
+    )
 
 client = gspread.authorize(CREDS)
 sheet = client.open_by_key(
