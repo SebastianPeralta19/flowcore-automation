@@ -21,17 +21,20 @@ SCOPES = [
     "https://www.googleapis.com/auth/drive"
 ]
 
-creds_raw = os.environ.get("GOOGLE_CREDENTIALS")
+# Railway mounts secrets as files
+secret_path = "/secrets/GOOGLE_CREDENTIALS"
 
-if creds_raw:
-    # Railway / Cloud
-    creds_dict = json.loads(creds_raw)
+if os.path.exists(secret_path):
+    # Railway production
+    with open(secret_path, "r") as f:
+        creds_dict = json.load(f)
+
     CREDS = Credentials.from_service_account_info(
         creds_dict,
         scopes=SCOPES
     )
 else:
-    # Local fallback
+    # Local development
     CREDS = Credentials.from_service_account_file(
         "credenciales.json",
         scopes=SCOPES
