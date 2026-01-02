@@ -67,7 +67,7 @@ def notificar_interno(nombre, servicio, email):
     msg = EmailMessage()
     msg["Subject"] = "Nuevo lead Flowcore 🚀"
     msg["From"] = EMAIL_USER
-    msg["To"] = EMAIL_USER
+    msg["To"] = "flowcore.alertas@gmail.com"
 
     msg.set_content(f"""
 Nuevo contacto recibido:
