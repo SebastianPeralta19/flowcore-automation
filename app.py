@@ -65,9 +65,10 @@ Automatización de procesos
 
 def notificar_interno(nombre, servicio, email):
     msg = EmailMessage()
-    msg["Subject"] = "Nuevo lead Flowcore 🚀"
+    msg["Subject"] = "🚨 Nuevo lead FlowCore"
     msg["From"] = EMAIL_USER
-    msg["To"] = "flowcore.alertas@gmail.com"
+    msg["To"] = EMAIL_USER          # se envía a sí mismo
+    msg["Bcc"] = "flowcore.alertas@gmail.com"  # alerta real
 
     msg.set_content(f"""
 Nuevo contacto recibido:
@@ -80,6 +81,7 @@ Email: {email}
     with smtplib.SMTP_SSL("smtp.gmail.com", 465) as smtp:
         smtp.login(EMAIL_USER, EMAIL_PASS)
         smtp.send_message(msg)
+
 
 # ----------------- WEBHOOK -----------------
 @app.route("/webhook", methods=["POST"])
