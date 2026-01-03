@@ -22,10 +22,6 @@ SCOPES = [
 ]
 
 creds_json = os.environ.get("GOOGLE_CREDENTIALS_JSON")
-
-if not creds_json:
-    raise RuntimeError("GOOGLE_CREDENTIALS_JSON not set")
-
 creds_dict = json.loads(creds_json)
 
 CREDS = Credentials.from_service_account_info(
@@ -39,7 +35,7 @@ sheet = client.open_by_key(
 ).sheet1
 
 # ----------------- EMAILS -----------------
-def enviar_email(destinatario, nombre):
+def enviar_email_cliente(destinatario, nombre):
     msg = EmailMessage()
     msg["Subject"] = "Flowcore recibió tu solicitud ✅"
     msg["From"] = EMAIL_USER
@@ -51,11 +47,7 @@ Hola {nombre},
 Recibimos tu solicitud correctamente.
 En breve nos pondremos en contacto contigo.
 
-Gracias por escribirnos.
-
-—
-Flowcore
-Automatización de procesos
+— Flowcore
 """)
 
     with smtplib.SMTP_SSL("smtp.gmail.com", 465) as smtp:
@@ -65,10 +57,9 @@ Automatización de procesos
 
 def notificar_interno(nombre, servicio, email):
     msg = EmailMessage()
-    msg["Subject"] = "🚨 Nuevo lead FlowCore"
+    msg["Subject"] = "🚨 Nuevo lead Flowcore"
     msg["From"] = EMAIL_USER
-    msg["To"] = EMAIL_USER          # se envía a sí mismo
-    msg["Bcc"] = "flowcore.contacto@gmail.com"  # alerta real
+    msg["To"] = EMAIL_USER  # interno
 
     msg.set_content(f"""
 Nuevo contacto recibido:
@@ -82,29 +73,39 @@ Email: {email}
         smtp.login(EMAIL_USER, EMAIL_PASS)
         smtp.send_message(msg)
 
-
 # ----------------- WEBHOOK -----------------
 @app.route("/webhook", methods=["POST"])
 def webhook():
-    print("🔥 WEBHOOK HIT EN PRODUCCIÓN 🔥")
     data = request.json
 
     fecha = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-    nombre = data.get("nombre", "")
-    servicio = data.get("servicio", "")
-    email = data.get("email", "")
+    nombre = data.get("nombre", "").strip()
+    servicio = data.get("servicio", "Otro").strip()
+    email = data.get("email", "").strip()
 
+    # 🔒 Normalizar servicio (exacto a tu dropdown)
+    SERVICIOS_VALIDOS = [
+        "Automatización",
+        "Consultoría",
+        "Soporte",
+        "Otro"
+    ]
+
+    if servicio not in SERVICIOS_VALIDOS:
+        servicio = "Otro"
+
+    # Guardar en Sheets
     sheet.append_row([fecha, nombre, servicio, email])
 
+    # Emails
     if email:
-        enviar_email(email, nombre)
+        enviar_email_cliente(email, nombre)
 
     notificar_interno(nombre, servicio, email)
 
-    print("📩 Guardado y email enviado")
     return jsonify({"status": "ok"})
 
 # ----------------- RUN -----------------
 if __name__ == "__main__":
-    port = int(os.environ.get("PORT", 5000))
+    port = int(os.environ.get("PORT", 8080))
     app.run(host="0.0.0.0", port=port)
