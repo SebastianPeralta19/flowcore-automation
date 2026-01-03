@@ -86,6 +86,7 @@ Email: {email}
 # ----------------- WEBHOOK -----------------
 @app.route("/webhook", methods=["POST"])
 def webhook():
+    print("🔥 WEBHOOK HIT EN PRODUCCIÓN 🔥")
     data = request.json
 
     fecha = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
