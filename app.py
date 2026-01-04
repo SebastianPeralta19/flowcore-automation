@@ -98,10 +98,10 @@ def webhook():
     sheet.append_row([fecha, nombre, servicio, email])
 
     # Emails
-    if email:
-        enviar_email_cliente(email, nombre)
+   # if email:
+       # enviar_email_cliente(email, nombre)
 
-    notificar_interno(nombre, servicio, email)
+    #notificar_interno(nombre, servicio, email)
 
     return jsonify({"status": "ok"})
 
