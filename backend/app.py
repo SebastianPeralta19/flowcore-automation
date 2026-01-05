@@ -136,8 +136,15 @@ def recibir_lead():
     email = data.get("email", "").strip()
     mensaje = data.get("mensaje", "").strip()
 
-    # Guardamos usando el mismo sistema (Google Sheets)
-    sheet.append_row([fecha, nombre, "Landing", email])
+   # Validación mínima
+    if not nombre or not email:
+        return jsonify({
+            "status": "error",
+            "mensaje": "Datos incompletos"
+        }), 400
+
+    # Guardar en Sheets (misma estructura siempre)
+    sheet.append_row([fecha, nombre, "Otro", email, "Landing"])
 
     print("Lead recibido desde landing:", data)
 
