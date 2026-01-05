@@ -111,7 +111,7 @@ def webhook():
         servicio = "Otro"
 
     # Guardar en Sheets
-    sheet.append_row([fecha, nombre, servicio, email])
+    sheet.append_row([fecha, nombre, servicio, email, "Correo"])
 
     # Este bloque lo comento porque ya no quiero enviar emails desde acá
     # Emails
@@ -144,7 +144,8 @@ def recibir_lead():
         }), 400
 
     # Guardar en Sheets (misma estructura siempre)
-    sheet.append_row([fecha, nombre, "Otro", email, "Landing"])
+    sheet.append_row([fecha, nombre, "Otro", email, "Web"])
+
 
     print("Lead recibido desde landing:", data)
 
