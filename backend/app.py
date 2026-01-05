@@ -25,15 +25,12 @@ SCOPES = [
     "https://www.googleapis.com/auth/drive"
 ]
 
-creds_json = os.environ.get("GOOGLE_CREDENTIALS_JSON")
+creds_json = os.getenv("GOOGLE_CREDENTIALS_JSON")
 
-# Si existe la variable de entorno, se usa (Railway)
-# Si no existe, se cargan credenciales locales
-if creds_json:
-    creds_dict = json.loads(creds_json)
-else:
-    with open("credenciales.json", "r", encoding="utf-8") as f:
-        creds_dict = json.load(f)
+if not creds_json:
+    raise Exception("GOOGLE_CREDENTIALS_JSON not found")
+
+creds_dict = json.loads(creds_json)
 
 CREDS = Credentials.from_service_account_info(
     creds_dict,
@@ -111,7 +108,11 @@ def webhook():
         servicio = "Otro"
 
     # Guardar en Sheets
-    sheet.append_row([fecha, nombre, servicio, email, "Correo"])
+    print("Saving to Sheets:", fecha, nombre, servicio, email, "Correo")
+    try:
+        sheet.append_row([fecha, nombre, servicio, email, "Correo"])
+    except Exception as e:
+        print("Error saving to Sheets:", e)
 
     # Este bloque lo comento porque ya no quiero enviar emails desde acá
     # Emails
