@@ -7,6 +7,7 @@ from datetime import datetime
 from dotenv import load_dotenv
 from email.message import EmailMessage
 from flask import Flask, request, jsonify
+from flask_cors import CORS
 from google.oauth2.service_account import Credentials
 
 # ----------------- ENV -------------------------------
@@ -14,7 +15,9 @@ load_dotenv()
 EMAIL_USER = os.getenv("EMAIL_USER")
 EMAIL_PASS = os.getenv("EMAIL_PASS")
 
+# ----------------- APP -------------------------------
 app = Flask(__name__)
+CORS(app)
 
 # ----------------- GOOGLE SHEETS -----------------------
 SCOPES = [
@@ -23,7 +26,14 @@ SCOPES = [
 ]
 
 creds_json = os.environ.get("GOOGLE_CREDENTIALS_JSON")
-creds_dict = json.loads(creds_json)
+
+# Si existe la variable de entorno, se usa (Railway)
+# Si no existe, se cargan credenciales locales
+if creds_json:
+    creds_dict = json.loads(creds_json)
+else:
+    with open("credenciales.json", "r", encoding="utf-8") as f:
+        creds_dict = json.load(f)
 
 CREDS = Credentials.from_service_account_info(
     creds_dict,
@@ -79,13 +89,17 @@ Email: {email}
 @app.route("/webhook", methods=["POST"])
 def webhook():
     data = request.json
-#Mostrar hora de colombia
-    fecha = datetime.now(ZoneInfo("America/Bogota")).strftime("%Y-%m-%d %H:%M:%S")
+
+    # Mostrar hora de Colombia
+    fecha = datetime.now(
+        ZoneInfo("America/Bogota")
+    ).strftime("%Y-%m-%d %H:%M:%S")
+
     nombre = data.get("nombre", "").strip()
     servicio = data.get("servicio", "Otro").strip()
     email = data.get("email", "").strip()
 
-    #Normalizar servicio (a mi dropdown)
+    # Normalizar servicio (a mi dropdown)
     SERVICIOS_VALIDOS = [
         "Automatización",
         "Consultoría",
@@ -98,17 +112,41 @@ def webhook():
 
     # Guardar en Sheets
     sheet.append_row([fecha, nombre, servicio, email])
-    
-    #Este bloque lo comento porque ya no quiero enviar emails desde acá
-    # Emails
-   # if email:
-       # enviar_email_cliente(email, nombre)
 
-    #notificar_interno(nombre, servicio, email)
+    # Este bloque lo comento porque ya no quiero enviar emails desde acá
+    # Emails
+    # if email:
+    #     enviar_email_cliente(email, nombre)
+
+    # notificar_interno(nombre, servicio, email)
 
     return jsonify({"status": "ok"})
 
+# ----------------- LEAD (Landing) ---------------------
+@app.route("/lead", methods=["POST"])
+def recibir_lead():
+    data = request.get_json()
+
+    # Hora Colombia
+    fecha = datetime.now(
+        ZoneInfo("America/Bogota")
+    ).strftime("%Y-%m-%d %H:%M:%S")
+
+    nombre = data.get("nombre", "").strip()
+    email = data.get("email", "").strip()
+    mensaje = data.get("mensaje", "").strip()
+
+    # Guardamos usando el mismo sistema (Google Sheets)
+    sheet.append_row([fecha, nombre, "Landing", email])
+
+    print("Lead recibido desde landing:", data)
+
+    return jsonify({
+        "status": "ok",
+        "mensaje": "Lead recibido correctamente"
+    })
+
 # ----------------- RUN -------------------------------------
 if __name__ == "__main__":
-    port = int(os.environ.get("PORT", 8080))
-    app.run(host="0.0.0.0", port=port)
+    port = int(os.environ.get("PORT", 5000))
+    app.run(host="0.0.0.0", port=port, debug=True)
