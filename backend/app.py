@@ -85,7 +85,7 @@ Email: {email}
 # ----------------- WEBHOOK --------------------------------------------------------
 @app.route("/webhook", methods=["POST"])
 def webhook():
-    data = request.json
+    data = request.get_json(force=True)
 
     # Mostrar hora de Colombia
     fecha = datetime.now(
